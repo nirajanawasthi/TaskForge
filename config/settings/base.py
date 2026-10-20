@@ -130,3 +130,12 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+
+# Project apps
+LOCAL_APPS = [
+    "apps.accounts",
+]
+INSTALLED_APPS += LOCAL_APPS
+
+AUTH_USER_MODEL = "accounts.User"
