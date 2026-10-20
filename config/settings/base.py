@@ -139,6 +139,7 @@ MAILERS = {
 # Project apps
 LOCAL_APPS = [
     "apps.accounts",
+    "apps.organizations",
 ]
 INSTALLED_APPS += LOCAL_APPS
 
