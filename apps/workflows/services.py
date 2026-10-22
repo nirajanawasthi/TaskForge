@@ -1,6 +1,8 @@
 from django.db import transaction
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
+from apps.activity_logs.models import ActivityLog
+from apps.activity_logs.services import log_activity
 from apps.tasks.models import Task
 from apps.tasks.permissions import TASK_WRITE_ROLES
 
@@ -44,6 +46,13 @@ def apply_transition(*, task, user, role, action):
     if action == "start" and task.assignee_id is None:
         raise ValidationError({"action": "Assign the task before starting it."})
 
+    old_status = task.status
     task.status = rule["to"]
     task.save(update_fields=["status", "updated_at"])
+    log_activity(
+        task=task,
+        actor=user,
+        action=ActivityLog.Action.STATUS_CHANGED,
+        details={"action": action, "from": old_status, "to": rule["to"].value},
+    )
     return task

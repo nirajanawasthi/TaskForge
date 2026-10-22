@@ -36,5 +36,7 @@ class TaskViewSet(
 
     def perform_update(self, serializer):
         serializer.instance = update_task(
-            task=serializer.instance, **serializer.validated_data
+            task=serializer.instance,
+            user=self.request.user,
+            **serializer.validated_data,
         )

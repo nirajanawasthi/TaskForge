@@ -143,6 +143,8 @@ LOCAL_APPS = [
     "apps.projects",
     "apps.tasks",
     "apps.workflows",
+    "apps.activity_logs",
+    "apps.comments",
 ]
 INSTALLED_APPS += LOCAL_APPS
 

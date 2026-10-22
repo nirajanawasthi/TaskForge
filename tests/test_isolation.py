@@ -6,6 +6,8 @@ from apps.accounts.models import User
 from apps.organizations.models import Membership, Organization
 from apps.organizations.services import create_organization
 from apps.projects.models import Project, ProjectMember
+from apps.activity_logs.models import ActivityLog
+from apps.comments.models import Comment
 from apps.tasks.models import Task
 
 PASSWORD = "Tf-Demo-2026-x9"
@@ -24,6 +26,9 @@ ENDPOINTS = [
     ("tasks:task-list", ("org", "project")),
     ("tasks:task-detail", ("org", "project", "task")),
     ("workflows:task-transition", ("org", "project", "task")),
+    ("comments:comment-list", ("org", "project", "task")),
+    ("comments:comment-detail", ("org", "project", "task", "comment")),
+    ("activity_logs:activity-list", ("org", "project", "task")),
 ]
 
 # A real user, so a leaky endpoint would visibly succeed in adding them.
@@ -35,6 +40,7 @@ BODY = {
     "assignee_email": "target@example.com",
     "role": "admin",
     "action": "start",
+    "body": "Changed",
 }
 
 
@@ -54,7 +60,15 @@ def make_project(org, name, is_private, creator, members):
 def snapshot():
     return {
         model.__name__: list(model.objects.order_by("pk").values())
-        for model in (Organization, Membership, Project, ProjectMember, Task)
+        for model in (
+            Organization,
+            Membership,
+            Project,
+            ProjectMember,
+            Task,
+            Comment,
+            ActivityLog,
+        )
     }
 
 
@@ -84,6 +98,12 @@ class IsolationSweepTests(TestCase):
         self.task_hidden = Task.objects.create(
             project=self.hidden, title="Hidden task", created_by=self.alice, assignee=self.alice
         )
+        for task, author in (
+            (self.task_a, self.alice),
+            (self.task_b, self.bob),
+            (self.task_hidden, self.alice),
+        ):
+            Comment.objects.create(task=task, author=author, body="Hello")
 
     def ids(self, org, project, task):
         return {
@@ -92,6 +112,7 @@ class IsolationSweepTests(TestCase):
             "task": task.pk,
             "membership": Membership.objects.filter(organization=org).order_by("pk").first().pk,
             "pm": ProjectMember.objects.filter(project=project).order_by("pk").first().pk,
+            "comment": Comment.objects.filter(task=task).order_by("pk").first().pk,
         }
 
     def missing_ids(self, org_pk=MISSING):
@@ -101,6 +122,7 @@ class IsolationSweepTests(TestCase):
             "task": MISSING,
             "membership": MISSING,
             "pm": MISSING,
+            "comment": MISSING,
         }
 
     def call(self, user, method, url):

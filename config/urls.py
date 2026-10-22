@@ -2,17 +2,15 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+TASK_URL = "api/organizations/<int:organization_pk>/projects/<int:project_pk>/tasks/"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("apps.accounts.urls")),
-    path(
-        "api/organizations/<int:organization_pk>/projects/<int:project_pk>/tasks/<int:task_pk>/",
-        include("apps.workflows.urls"),
-    ),
-    path(
-        "api/organizations/<int:organization_pk>/projects/<int:project_pk>/tasks/",
-        include("apps.tasks.urls"),
-    ),
+    path(TASK_URL + "<int:task_pk>/comments/", include("apps.comments.urls")),
+    path(TASK_URL + "<int:task_pk>/activity/", include("apps.activity_logs.urls")),
+    path(TASK_URL + "<int:task_pk>/", include("apps.workflows.urls")),
+    path(TASK_URL, include("apps.tasks.urls")),
     path(
         "api/organizations/<int:organization_pk>/projects/",
         include("apps.projects.urls"),
