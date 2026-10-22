@@ -146,6 +146,7 @@ LOCAL_APPS = [
     "apps.activity_logs",
     "apps.comments",
     "apps.reports",
+    "apps.notifications",
 ]
 INSTALLED_APPS += LOCAL_APPS
 

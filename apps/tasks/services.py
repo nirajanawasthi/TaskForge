@@ -3,6 +3,8 @@ from rest_framework.exceptions import ValidationError
 
 from apps.activity_logs.models import ActivityLog
 from apps.activity_logs.services import log_activity
+from apps.notifications.models import Notification
+from apps.notifications.services import notify
 from apps.projects.models import ProjectMember
 
 from .models import Task
@@ -17,6 +19,16 @@ def _text(value):
 
 def _email(user):
     return user.email if user else None
+
+
+def _notify_assigned(task, actor, assignee):
+    notify(
+        task=task,
+        actor=actor,
+        recipients=[assignee],
+        kind=Notification.Kind.TASK_ASSIGNED,
+        message=f'{actor.email} assigned you "{task.title}"',
+    )
 
 
 def _resolve_assignee(project, email):
@@ -47,6 +59,8 @@ def create_task(*, project, user, assignee_email=None, **fields):
         action=ActivityLog.Action.TASK_CREATED,
         details={"title": task.title, "assignee": _email(assignee)},
     )
+    if assignee:
+        _notify_assigned(task, user, assignee)
     return task
 
 
@@ -60,6 +74,7 @@ def update_task(*, task, user, assignee_email=UNSET, **fields):
             setattr(task, name, value)
 
     assignee_change = None
+    new_assignee = None
     if assignee_email is not UNSET:
         new_assignee = _resolve_assignee(task.project, assignee_email)
         if getattr(new_assignee, "pk", None) != task.assignee_id:
@@ -85,4 +100,6 @@ def update_task(*, task, user, assignee_email=UNSET, **fields):
             action=ActivityLog.Action.ASSIGNEE_CHANGED,
             details=assignee_change,
         )
+        if new_assignee:
+            _notify_assigned(task, user, new_assignee)
     return task
