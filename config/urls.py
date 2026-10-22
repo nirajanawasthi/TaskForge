@@ -5,6 +5,18 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("apps.accounts.urls")),
+    path(
+        "api/organizations/<int:organization_pk>/projects/<int:project_pk>/tasks/<int:task_pk>/",
+        include("apps.workflows.urls"),
+    ),
+    path(
+        "api/organizations/<int:organization_pk>/projects/<int:project_pk>/tasks/",
+        include("apps.tasks.urls"),
+    ),
+    path(
+        "api/organizations/<int:organization_pk>/projects/",
+        include("apps.projects.urls"),
+    ),
     path("api/organizations/", include("apps.organizations.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

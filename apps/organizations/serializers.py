@@ -18,3 +18,23 @@ class OrganizationSerializer(serializers.ModelSerializer):
         )
         organization.my_role = Membership.Role.ADMIN
         return organization
+
+
+class MembershipSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = Membership
+        fields = ("id", "email", "role", "joined_at")
+        read_only_fields = fields
+
+
+class AddMemberSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(
+        choices=Membership.Role.choices, default=Membership.Role.MEMBER
+    )
+
+
+class ChangeRoleSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=Membership.Role.choices)
