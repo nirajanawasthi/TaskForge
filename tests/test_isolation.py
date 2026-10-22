@@ -29,6 +29,8 @@ ENDPOINTS = [
     ("comments:comment-list", ("org", "project", "task")),
     ("comments:comment-detail", ("org", "project", "task", "comment")),
     ("activity_logs:activity-list", ("org", "project", "task")),
+    ("reports:dashboard", ("org",)),
+    ("reports:overdue", ("org",)),
 ]
 
 # A real user, so a leaky endpoint would visibly succeed in adding them.
