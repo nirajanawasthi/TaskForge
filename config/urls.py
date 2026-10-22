@@ -1,10 +1,12 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 TASK_URL = "api/organizations/<int:organization_pk>/projects/<int:project_pk>/tasks/"
 
 urlpatterns = [
+    path('', RedirectView.as_view(pattern_name='swagger-ui')),
     path("admin/", admin.site.urls),
     path("api/auth/", include("apps.accounts.urls")),
     path(TASK_URL + "<int:task_pk>/comments/", include("apps.comments.urls")),

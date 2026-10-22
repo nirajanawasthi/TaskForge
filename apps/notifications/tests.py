@@ -282,3 +282,18 @@ class NotificationApiTests(NotificationTestBase):
         self.assertEqual(created.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertEqual(deleted.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertTrue(Notification.objects.filter(pk=note.pk).exists())
+
+
+class NotificationEdgeCaseTests(NotificationTestBase):
+    def test_task_without_assignee_notifies_nobody_and_does_not_crash(self):
+        task = self.make_task(assignee=None, status=S.IN_REVIEW)
+        response = self.act(self.lead, task, "approve")
+        self.assertLess(response.status_code, 500)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_user_removed_from_the_organization_is_not_notified(self):
+        task = self.make_task(assignee=self.member, created_by=self.admin)
+        Membership.objects.filter(user=self.member, organization=self.org).delete()
+        self.comment(self.lead, task)
+        self.assertEqual(self.notes(self.member).count(), 0)
+        self.assertEqual(self.notes(self.admin).count(), 1)
