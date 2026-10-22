@@ -97,7 +97,7 @@ class ProjectApiTests(TestCase):
         self.client.force_authenticate(self.member)
         listing = self.client.get(self.list_url)
         detail = self.client.get(self.detail_url(project))
-        self.assertEqual([p["id"] for p in listing.data], [project.pk])
+        self.assertEqual([p["id"] for p in listing.data["results"]], [project.pk])
         self.assertEqual(detail.status_code, status.HTTP_200_OK)
 
     def test_member_cannot_see_private_project_they_are_not_in(self):
@@ -105,7 +105,7 @@ class ProjectApiTests(TestCase):
         self.client.force_authenticate(self.member)
         listing = self.client.get(self.list_url)
         detail = self.client.get(self.detail_url(project))
-        self.assertEqual(listing.data, [])
+        self.assertEqual(listing.data["results"], [])
         self.assertEqual(detail.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_project_member_sees_private_project(self):
@@ -115,7 +115,7 @@ class ProjectApiTests(TestCase):
         self.client.force_authenticate(self.member)
         listing = self.client.get(self.list_url)
         detail = self.client.get(self.detail_url(project))
-        self.assertEqual([p["id"] for p in listing.data], [project.pk])
+        self.assertEqual([p["id"] for p in listing.data["results"]], [project.pk])
         self.assertEqual(detail.status_code, status.HTTP_200_OK)
 
     def test_org_admin_sees_private_project_without_membership(self):

@@ -1,7 +1,11 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+
+from .filters import ProjectFilter
 
 from .mixins import OrganizationScopedMixin, ProjectScopedMixin
 from .models import Project, ProjectMember
@@ -26,6 +30,9 @@ class ProjectViewSet(
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated, CanManageProjects]
     http_method_names = ["get", "post", "patch", "head", "options"]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = ProjectFilter
+    search_fields = ["name", "description"]
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):

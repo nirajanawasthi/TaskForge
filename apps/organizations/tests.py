@@ -88,7 +88,7 @@ class OrganizationApiTests(TestCase):
         self.client.force_authenticate(self.alice)
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        ids = [item["id"] for item in response.data]
+        ids = [item["id"] for item in response.data["results"]]
         self.assertEqual(ids, [mine.pk])
 
     def test_retrieve_own_organization(self):

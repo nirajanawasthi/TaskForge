@@ -68,7 +68,7 @@ class ProjectMemberApiTests(TestCase):
         self.client.force_authenticate(self.member)
         response = self.client.get(self.list_url(self.public))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual([m["email"] for m in response.data], ["admin@example.com"])
+        self.assertEqual([m["email"] for m in response.data["results"]], ["admin@example.com"])
 
     def test_member_cannot_list_private_project_they_are_not_in(self):
         self.client.force_authenticate(self.member2)
@@ -80,7 +80,7 @@ class ProjectMemberApiTests(TestCase):
         self.client.force_authenticate(self.admin)
         response = self.client.get(self.list_url(hidden))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual([m["email"] for m in response.data], ["member@example.com"])
+        self.assertEqual([m["email"] for m in response.data["results"]], ["member@example.com"])
 
     def test_admin_adds_organization_member_by_email(self):
         self.client.force_authenticate(self.admin)

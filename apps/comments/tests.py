@@ -86,7 +86,7 @@ class CommentApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["author"], "member2@example.com")
         listing = self.client.get(self.list_url())
-        self.assertEqual([c["body"] for c in listing.data], ["First!"])
+        self.assertEqual([c["body"] for c in listing.data["results"]], ["First!"])
 
     def test_comment_is_recorded_in_activity(self):
         self.client.force_authenticate(self.member)

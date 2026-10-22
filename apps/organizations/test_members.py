@@ -55,7 +55,7 @@ class MembershipApiTests(TestCase):
         self.client.force_authenticate(self.member)
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        emails = sorted(item["email"] for item in response.data)
+        emails = sorted(item["email"] for item in response.data["results"])
         self.assertEqual(emails, ["admin@example.com", "member@example.com"])
 
     def test_member_cannot_add_change_or_remove(self):

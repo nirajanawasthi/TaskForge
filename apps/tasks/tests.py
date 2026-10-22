@@ -110,7 +110,7 @@ class TaskApiTests(TestCase):
         self.client.force_authenticate(self.member)
         listing = self.client.get(self.list_url)
         detail = self.client.get(self.detail_url(task))
-        self.assertEqual([t["id"] for t in listing.data], [task.pk])
+        self.assertEqual([t["id"] for t in listing.data["results"]], [task.pk])
         self.assertEqual(detail.status_code, status.HTTP_200_OK)
 
     def test_create_with_assignee_by_email(self):
@@ -243,7 +243,7 @@ class TaskApiTests(TestCase):
         self.client.force_authenticate(self.admin)
         response = self.client.get(self.list_url_for(secret))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data["results"]), 1)
 
     def test_task_from_another_project_returns_404(self):
         other = make_project(self.org, "Beta", False, self.admin, [self.admin])

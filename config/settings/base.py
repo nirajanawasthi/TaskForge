@@ -185,3 +185,8 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+
+# Pagination and filtering
+INSTALLED_APPS += ["django_filters"]
+REST_FRAMEWORK["DEFAULT_PAGINATION_CLASS"] = "config.pagination.StandardPagination"

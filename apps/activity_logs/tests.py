@@ -178,7 +178,7 @@ class ActivityApiTests(TestCase):
         response = self.client.get(self.activity_url(task))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            [(item["action"], item["actor"]) for item in response.data],
+            [(item["action"], item["actor"]) for item in response.data["results"]],
             [("task_updated", "admin@example.com"), ("task_created", "lead@example.com")],
         )
 
@@ -189,7 +189,7 @@ class ActivityApiTests(TestCase):
         self.client.force_authenticate(self.member)
         response = self.client.get(self.activity_url(task))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data["results"]), 1)
 
     def test_hidden_private_project_returns_404(self):
         secret = make_project(self.org, "Secret", True, self.admin, [self.admin, self.lead])
