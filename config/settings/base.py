@@ -192,3 +192,8 @@ SPECTACULAR_SETTINGS = {
 # Pagination and filtering
 INSTALLED_APPS += ["django_filters"]
 REST_FRAMEWORK["DEFAULT_PAGINATION_CLASS"] = "config.pagination.StandardPagination"
+
+
+# Frontend (served by Django: one HTML shell plus static CSS and JS)
+TEMPLATES[0]["DIRS"] = [BASE_DIR / "frontend" / "templates"]
+STATICFILES_DIRS = [BASE_DIR / "frontend" / "static"]

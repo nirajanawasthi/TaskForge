@@ -1,0 +1,2232 @@
+openapi: 3.0.3
+info:
+  title: TaskForge API
+  version: 0.1.0
+  description: Team task management and workflow system.
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: auth_me_partial_update
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/notifications/:
+    get:
+      operationId: notifications_list
+      description: The caller's own notifications. Other people's ids answer 404.
+      parameters:
+      - in: query
+        name: is_read
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - changes_requested
+            - comment_added
+            - review_requested
+            - task_approved
+            - task_assigned
+            - task_reopened
+        description: |-
+          * `task_assigned` - Task assigned
+          * `review_requested` - Review requested
+          * `changes_requested` - Changes requested
+          * `task_approved` - Task approved
+          * `task_reopened` - Task reopened
+          * `comment_added` - Comment added
+        explode: true
+        style: form
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/notifications/{id}/read/:
+    post:
+      operationId: notifications_read_create
+      description: The caller's own notifications. Other people's ids answer 404.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification.
+        required: true
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/read-all/:
+    post:
+      operationId: notifications_read_all_create
+      description: The caller's own notifications. Other people's ids answer 404.
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Marked'
+          description: ''
+  /api/notifications/unread-count/:
+    get:
+      operationId: notifications_unread_count_retrieve
+      description: The caller's own notifications. Other people's ids answer 404.
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCount'
+          description: ''
+  /api/organizations/:
+    get:
+      operationId: organizations_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+          description: ''
+    post:
+      operationId: organizations_create
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/organizations/{organization_pk}/members/:
+    get:
+      operationId: organizations_members_list
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMembershipList'
+          description: ''
+    post:
+      operationId: organizations_members_create
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddMember'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+          description: ''
+  /api/organizations/{organization_pk}/members/{id}/:
+    patch:
+      operationId: organizations_members_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedChangeRole'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedChangeRole'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedChangeRole'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+          description: ''
+    delete:
+      operationId: organizations_members_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/organizations/{organization_pk}/projects/:
+    get:
+      operationId: organizations_projects_list
+      description: |-
+        Resolve the caller's membership in the URL's organization.
+
+        check_permissions runs ensure_visible() first, so anything the caller may
+        not see answers 404 before any role check can answer 403.
+      parameters:
+      - in: query
+        name: is_private
+        schema:
+          type: boolean
+      - in: query
+        name: ordering
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - -created_at
+            - -name
+            - -updated_at
+            - created_at
+            - name
+            - updated_at
+        description: |-
+          Ordering
+
+          * `name` - Name
+          * `-name` - Name (descending)
+          * `created_at` - Created at
+          * `-created_at` - Created at (descending)
+          * `updated_at` - Updated at
+          * `-updated_at` - Updated at (descending)
+        explode: false
+        style: form
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectList'
+          description: ''
+    post:
+      operationId: organizations_projects_create
+      description: |-
+        Resolve the caller's membership in the URL's organization.
+
+        check_permissions runs ensure_visible() first, so anything the caller may
+        not see answers 404 before any role check can answer 403.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Project'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Project'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/organizations/{organization_pk}/projects/{id}/:
+    get:
+      operationId: organizations_projects_retrieve
+      description: |-
+        Resolve the caller's membership in the URL's organization.
+
+        check_permissions runs ensure_visible() first, so anything the caller may
+        not see answers 404 before any role check can answer 403.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project.
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    patch:
+      operationId: organizations_projects_partial_update
+      description: |-
+        Resolve the caller's membership in the URL's organization.
+
+        check_permissions runs ensure_visible() first, so anything the caller may
+        not see answers 404 before any role check can answer 403.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this project.
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/organizations/{organization_pk}/projects/{project_pk}/members/:
+    get:
+      operationId: organizations_projects_members_list
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectMemberList'
+          description: ''
+    post:
+      operationId: organizations_projects_members_create
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProjectMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddProjectMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddProjectMember'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+          description: ''
+  /api/organizations/{organization_pk}/projects/{project_pk}/members/{id}/:
+    delete:
+      operationId: organizations_projects_members_destroy
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/organizations/{organization_pk}/projects/{project_pk}/tasks/:
+    get:
+      operationId: organizations_projects_tasks_list
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: query
+        name: assigned_to_me
+        schema:
+          type: boolean
+      - in: query
+        name: assignee_email
+        schema:
+          type: string
+      - in: query
+        name: due_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: due_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: ordering
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - -created_at
+            - -due_date
+            - -priority
+            - -title
+            - -updated_at
+            - created_at
+            - due_date
+            - priority
+            - title
+            - updated_at
+        description: |-
+          Ordering
+
+          * `due_date` - Due date
+          * `-due_date` - Due date (descending)
+          * `created_at` - Created at
+          * `-created_at` - Created at (descending)
+          * `updated_at` - Updated at
+          * `-updated_at` - Updated at (descending)
+          * `title` - Title
+          * `-title` - Title (descending)
+          * `priority` - Priority
+          * `-priority` - Priority (descending)
+        explode: false
+        style: form
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: overdue
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: priority
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - high
+            - low
+            - medium
+            - urgent
+        description: |-
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `urgent` - Urgent
+        explode: true
+        style: form
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - done
+            - in_progress
+            - in_review
+            - todo
+        description: |-
+          * `todo` - To Do
+          * `in_progress` - In Progress
+          * `in_review` - In Review
+          * `done` - Done
+        explode: true
+        style: form
+      - in: query
+        name: unassigned
+        schema:
+          type: boolean
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskList'
+          description: ''
+    post:
+      operationId: organizations_projects_tasks_create
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/organizations/{organization_pk}/projects/{project_pk}/tasks/{id}/:
+    get:
+      operationId: organizations_projects_tasks_retrieve
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    patch:
+      operationId: organizations_projects_tasks_partial_update
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTask'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTask'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTask'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/organizations/{organization_pk}/projects/{project_pk}/tasks/{task_pk}/activity/:
+    get:
+      operationId: organizations_projects_tasks_activity_list
+      description: Read-only history of a task, newest first.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: task_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedActivityList'
+          description: ''
+  /api/organizations/{organization_pk}/projects/{project_pk}/tasks/{task_pk}/comments/:
+    get:
+      operationId: organizations_projects_tasks_comments_list
+      description: Resolve the URL's task, only if its project is visible to the caller.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: task_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCommentList'
+          description: ''
+    post:
+      operationId: organizations_projects_tasks_comments_create
+      description: Resolve the URL's task, only if its project is visible to the caller.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: task_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Comment'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+  /api/organizations/{organization_pk}/projects/{project_pk}/tasks/{task_pk}/comments/{id}/:
+    patch:
+      operationId: organizations_projects_tasks_comments_partial_update
+      description: Resolve the URL's task, only if its project is visible to the caller.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: task_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+    delete:
+      operationId: organizations_projects_tasks_comments_destroy
+      description: Resolve the URL's task, only if its project is visible to the caller.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: task_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/organizations/{organization_pk}/projects/{project_pk}/tasks/{task_pk}/transition/:
+    post:
+      operationId: organizations_projects_tasks_transition_create
+      description: Resolve the URL's project, only if the caller is allowed to see
+        it.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: task_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Transition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Transition'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/organizations/{organization_pk}/reports/dashboard/:
+    get:
+      operationId: organizations_reports_dashboard_retrieve
+      description: |-
+        Resolve the caller's membership in the URL's organization.
+
+        check_permissions runs ensure_visible() first, so anything the caller may
+        not see answers 404 before any role check can answer 403.
+      parameters:
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+          description: ''
+  /api/organizations/{organization_pk}/reports/overdue/:
+    get:
+      operationId: organizations_reports_overdue_list
+      description: |-
+        Resolve the caller's membership in the URL's organization.
+
+        check_permissions runs ensure_visible() first, so anything the caller may
+        not see answers 404 before any role check can answer 403.
+      parameters:
+      - in: query
+        name: assignee_email
+        schema:
+          type: string
+      - in: path
+        name: organization_pk
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: priority
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - high
+            - low
+            - medium
+            - urgent
+        description: |-
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `urgent` - Urgent
+        explode: true
+        style: form
+      - in: query
+        name: project
+        schema:
+          type: number
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOverdueTaskList'
+          description: ''
+  /api/organizations/{id}/:
+    get:
+      operationId: organizations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+components:
+  schemas:
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        actor:
+          type: string
+          format: email
+          readOnly: true
+          nullable: true
+        action:
+          allOf:
+          - $ref: '#/components/schemas/ActivityActionEnum'
+          readOnly: true
+        details:
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - created_at
+      - details
+      - id
+    ActivityActionEnum:
+      enum:
+      - task_created
+      - task_updated
+      - assignee_changed
+      - status_changed
+      - comment_added
+      type: string
+      description: |-
+        * `task_created` - Task created
+        * `task_updated` - Task updated
+        * `assignee_changed` - Assignee changed
+        * `status_changed` - Status changed
+        * `comment_added` - Comment added
+    AddMember:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          default: member
+      required:
+      - email
+    AddProjectMember:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author:
+          type: string
+          format: email
+          readOnly: true
+          nullable: true
+        body:
+          type: string
+          maxLength: 2000
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - body
+      - created_at
+      - id
+      - updated_at
+    Dashboard:
+      type: object
+      description: Documents the dashboard response. The view returns plain dicts.
+      properties:
+        projects:
+          type: integer
+        tasks:
+          $ref: '#/components/schemas/TaskTotals'
+        open_by_priority:
+          $ref: '#/components/schemas/PriorityCounts'
+        my_tasks:
+          $ref: '#/components/schemas/MyTasks'
+        workload:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workload'
+      required:
+      - my_tasks
+      - open_by_priority
+      - projects
+      - tasks
+    KindEnum:
+      enum:
+      - task_assigned
+      - review_requested
+      - changes_requested
+      - task_approved
+      - task_reopened
+      - comment_added
+      type: string
+      description: |-
+        * `task_assigned` - Task assigned
+        * `review_requested` - Review requested
+        * `changes_requested` - Changes requested
+        * `task_approved` - Task approved
+        * `task_reopened` - Task reopened
+        * `comment_added` - Comment added
+    Marked:
+      type: object
+      properties:
+        marked:
+          type: integer
+      required:
+      - marked
+    Membership:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - email
+      - id
+      - joined_at
+      - role
+    MyTasks:
+      type: object
+      properties:
+        open:
+          type: integer
+        overdue:
+          type: integer
+      required:
+      - open
+      - overdue
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        is_read:
+          type: boolean
+          readOnly: true
+        task_id:
+          type: integer
+          readOnly: true
+        project_id:
+          type: integer
+          readOnly: true
+        organization_id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        read_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - id
+      - is_read
+      - kind
+      - message
+      - organization_id
+      - project_id
+      - read_at
+      - task_id
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        my_role:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - my_role
+      - name
+      - slug
+    OverdueTask:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        project_id:
+          type: integer
+          readOnly: true
+        project:
+          type: string
+          readOnly: true
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        assignee:
+          type: string
+          format: email
+          readOnly: true
+          nullable: true
+        due_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        days_overdue:
+          type: integer
+          readOnly: true
+      required:
+      - assignee
+      - days_overdue
+      - due_date
+      - id
+      - priority
+      - project
+      - project_id
+      - status
+      - title
+    PaginatedActivityList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+    PaginatedCommentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    PaginatedMembershipList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Membership'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PaginatedOrganizationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+    PaginatedOverdueTaskList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OverdueTask'
+    PaginatedProjectList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+    PaginatedProjectMemberList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectMember'
+    PaginatedTaskList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    PatchedChangeRole:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+    PatchedComment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author:
+          type: string
+          format: email
+          readOnly: true
+          nullable: true
+        body:
+          type: string
+          maxLength: 2000
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedProject:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+        is_private:
+          type: boolean
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedTask:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        assignee:
+          type: string
+          format: email
+          readOnly: true
+          nullable: true
+        assignee_email:
+          type: string
+          format: email
+          writeOnly: true
+          nullable: true
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+    PriorityCounts:
+      type: object
+      properties:
+        low:
+          type: integer
+        medium:
+          type: integer
+        high:
+          type: integer
+        urgent:
+          type: integer
+      required:
+      - high
+      - low
+      - medium
+      - urgent
+    PriorityEnum:
+      enum:
+      - low
+      - medium
+      - high
+      - urgent
+      type: string
+      description: |-
+        * `low` - Low
+        * `medium` - Medium
+        * `high` - High
+        * `urgent` - Urgent
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+        is_private:
+          type: boolean
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - name
+      - updated_at
+    ProjectMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - email
+      - id
+      - joined_at
+    Register:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+        password2:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - id
+      - password
+      - password2
+    RoleEnum:
+      enum:
+      - admin
+      - manager
+      - team_lead
+      - member
+      type: string
+      description: |-
+        * `admin` - Admin
+        * `manager` - Manager
+        * `team_lead` - Team Lead
+        * `member` - Member
+    StatusCounts:
+      type: object
+      properties:
+        todo:
+          type: integer
+        in_progress:
+          type: integer
+        in_review:
+          type: integer
+        done:
+          type: integer
+      required:
+      - done
+      - in_progress
+      - in_review
+      - todo
+    StatusEnum:
+      enum:
+      - todo
+      - in_progress
+      - in_review
+      - done
+      type: string
+      description: |-
+        * `todo` - To Do
+        * `in_progress` - In Progress
+        * `in_review` - In Review
+        * `done` - Done
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        assignee:
+          type: string
+          format: email
+          readOnly: true
+          nullable: true
+        assignee_email:
+          type: string
+          format: email
+          writeOnly: true
+          nullable: true
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assignee
+      - created_at
+      - created_by
+      - id
+      - status
+      - title
+      - updated_at
+    TaskTotals:
+      type: object
+      properties:
+        total:
+          type: integer
+        by_status:
+          $ref: '#/components/schemas/StatusCounts'
+        overdue:
+          type: integer
+        due_soon:
+          type: integer
+        unassigned:
+          type: integer
+        completion_rate:
+          type: number
+          format: double
+      required:
+      - by_status
+      - completion_rate
+      - due_soon
+      - overdue
+      - total
+      - unassigned
+    TokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - email
+      - password
+      - refresh
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+    Transition:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/TransitionActionEnum'
+      required:
+      - action
+    TransitionActionEnum:
+      enum:
+      - approve
+      - reopen
+      - request_changes
+      - start
+      - submit_for_review
+      type: string
+      description: |-
+        * `approve` - approve
+        * `reopen` - reopen
+        * `request_changes` - request_changes
+        * `start` - start
+        * `submit_for_review` - submit_for_review
+    UnreadCount:
+      type: object
+      properties:
+        unread:
+          type: integer
+      required:
+      - unread
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_joined
+      - email
+      - id
+    Workload:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        open:
+          type: integer
+        overdue:
+          type: integer
+        done:
+          type: integer
+      required:
+      - done
+      - email
+      - open
+      - overdue
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
